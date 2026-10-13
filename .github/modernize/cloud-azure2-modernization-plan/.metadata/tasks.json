@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for the Photo Album Azure cloud modernization plan.",
+  "tasks": [
+    {
+      "type": "setupBaseline",
+      "id": "001-setupBaseline",
+      "description": "Capture the Photo Album application's pre-modernization baseline for post-migration verification.",
+      "reason": "A frozen baseline is required to compare application behavior before and after Azure service migration.",
+      "requirements": "Snapshot the project's main source directory, src/main, and capture the baseline test specification and test data before code or infrastructure changes.",
+      "dependencies": []
+    },
+    {
+      "type": "infrastructure",
+      "id": "002-infrastructure-azure",
+      "description": "Extend the existing AKS, container registry, and PostgreSQL setup with reproducible Azure infrastructure as code.",
+      "reason": "Azure resources are required to host the application and its PostgreSQL database.",
+      "requirements": "Generate and provision Terraform infrastructure for the existing Azure Kubernetes Service, Azure Container Registry, and Azure Database for PostgreSQL deployment architecture. Use the existing azure-setup.ps1 configuration as context, preserve secure connectivity and managed identity, and do not assume a subscription ID; use the configured westus3 region unless the user specifies otherwise.",
+      "iacType": "terraform",
+      "provision": true,
+      "skills": [
+        {
+          "name": "infrastructure-terraform-generation",
+          "location": "builtin"
+        }
+      ]
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-oracle-to-postgresql",
+      "description": "Migrate the Photo Album application's Oracle database to Azure Database for PostgreSQL.",
+      "reason": "Oracle Database is the application's current persistence service and is explicitly requested to be migrated.",
+      "requirements": "Migrate database access, schema compatibility, and persisted photo and metadata data from Oracle to Azure Database for PostgreSQL. Preserve application behavior and verify the application builds and unit tests pass. Do not upgrade the Java or Spring Boot framework versions.",
+      "skills": [
+        {
+          "name": "migration-oracle-to-postgresql",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "004-transform-cloud-readiness",
+      "description": "Resolve the Photo Album application's cloud-readiness needs for its Azure deployment.",
+      "reason": "The application must be configured to run reliably with the requested Azure infrastructure and managed database.",
+      "requirements": "Address cloud-readiness concerns in the existing application configuration and runtime behavior so the application can run in the provisioned Azure environment and connect to Azure Database for PostgreSQL using managed identity. Retain existing application functionality and framework versions.",
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "dependencies": [
+        "003-transform-oracle-to-postgresql"
+      ]
+    },
+    {
+      "type": "integrationTest",
+      "id": "005-integrationTest",
+      "description": "Build integration tests for migrated Azure services and run post-migration verification",
+      "reason": "Provisioned Azure infrastructure enables real-mode verification of migrated services.",
+      "requirements": "Build and run integration tests against the provisioned Azure services using real-mode dependencies. Verify the migrated application against the frozen baseline test specification.",
+      "dependencies": [
+        "001-setupBaseline",
+        "002-infrastructure-azure",
+        "003-transform-oracle-to-postgresql",
+        "004-transform-cloud-readiness"
+      ]
+    },
+    {
+      "type": "security",
+      "id": "006-security-cve-remediation",
+      "description": "Scan project dependencies for known vulnerabilities and remediate identified CVEs.",
+      "reason": "Security and CVE remediation is required for every modernization plan before deployment.",
+      "requirements": "Scan all project dependencies for known CVEs and remediate identified vulnerabilities to the minimum patched versions. If remediation requires a major-version change, document the affected dependency, current and target versions, and breaking-change risk. Verify the project builds and all unit tests pass after remediation.",
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "dependencies": [
+        "002-infrastructure-azure",
+        "003-transform-oracle-to-postgresql",
+        "004-transform-cloud-readiness",
+        "005-integrationTest"
+      ]
+    },
+    {
+      "type": "deployment",
+      "id": "007-deployment-azure-aks",
+      "description": "Containerize and deploy the Photo Album application to Azure Kubernetes Service.",
+      "reason": "Deployment to Azure is explicitly requested to make the modernized application available in its target cloud environment.",
+      "requirements": "Build the application container and deploy it to the AKS cluster and Azure Container Registry configured by the infrastructure task. Configure the application to connect securely to Azure Database for PostgreSQL using managed identity and verify the deployed application is operational.",
+      "targetAzureService": "aks",
+      "resourceStatus": "Existing AKS, ACR, and PostgreSQL setup extended and provisioned by the infrastructure task.",
+      "deploymentTool": "terraform",
+      "skills": [
+        {
+          "name": "azcli-aks-deploy",
+          "location": "builtin"
+        }
+      ],
+      "dependencies": [
+        "002-infrastructure-azure",
+        "003-transform-oracle-to-postgresql",
+        "004-transform-cloud-readiness",
+        "005-integrationTest",
+        "006-security-cve-remediation"
+      ]
+    }
+  ],
+  "metadata": {
+    "planName": "cloud-azure2-modernization-plan",
+    "projectName": "Photo Album",
+    "language": "java",
+    "createdAt": "2026-10-13T12:50:44Z",
+    "version": "1.0"
+  }
+}
