@@ -39,8 +39,8 @@ present in this repository, and upgrade recommendations are out of scope.
 
 | App | Source | Azure target | Authentication | Notes |
 |-----|--------|--------------|----------------|-------|
-| Photo Album | Oracle DB | Azure PostgreSQL | Managed identity | Replace Oracle SQL |
-| Photo Album | Local Docker | Container Apps | Managed identity | Cloud application host |
+| Photo Album | Oracle | Azure PostgreSQL | MI | Replace Oracle SQL |
+| Photo Album | Docker | Container Apps | MI | Host application |
 
 ---
 
@@ -98,6 +98,7 @@ a major-version upgrade is required, and verify the build and unit tests.
 
 - [x] Environment setup → Provision new Azure infrastructure, as requested.
 - [ ] Azure subscription ID → Not provided; required before provisioning.
+- [ ] Azure region and resource sizing → Not provided; determine before provisioning.
 - [x] Integration testing → Include real-mode verification against provisioned
   Azure infrastructure (the default when infrastructure is provisioned).
 - [x] Security/CVE remediation → Include the default security task.
