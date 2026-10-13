@@ -20,7 +20,7 @@
 >
 > - Replace Oracle with Azure Database for PostgreSQL while retaining photo and metadata persistence.
 > - Address the application's cloud-readiness needs and provision the Azure resources required to run it.
-> - Containerize, deploy, and verify the application on Azure Container Apps.
+> - Containerize, deploy, and verify the application on Azure Kubernetes Service.
 >
 > The work will establish a baseline, migrate the database and address cloud readiness, provision Azure infrastructure, verify migrated services, then deploy the application and complete a security review. Existing framework versions are retained; framework-upgrade recommendations are out of scope.
 
@@ -31,7 +31,7 @@
 | Application | Original Service | New Azure Service | Authentication | Comments |
 |-------------|------------------|-------------------|----------------|----------|
 | Photo Album | Oracle Database | Azure Database for PostgreSQL | Managed identity | Migrate stored photos and metadata |
-| Photo Album | Local container deployment | Azure Container Apps | Managed identity | Provision Azure resources and deploy |
+| Photo Album | Local container deployment | Azure Kubernetes Service | Managed identity | Extend the repository's AKS deployment setup |
 
 ---
 
@@ -40,7 +40,7 @@
 - [x] Environment setup → Provision new Azure infrastructure, as requested.
 - [x] Integration testing → Include real-mode integration tests against the provisioned Azure environment, inferred from the infrastructure request.
 - [x] Security/CVE remediation → Include the required dependency security review.
-- [x] Deployment target → Azure Container Apps, the default target because none was specified.
+- [x] Deployment target → Azure Kubernetes Service, inferred from the existing `azure-setup.ps1` AKS configuration.
 - [x] Containerization → Included in deployment; no separate containerization task is needed.
-- [ ] Azure subscription and deployment region were not provided; select them before provisioning.
+- [ ] Azure subscription was not provided; select it before provisioning. The repository's existing setup defaults to `westus3`.
 - [ ] No assessment report was available in this repository. Only the Oracle-to-PostgreSQL request and cloud-readiness scope stated in the issue are included; framework upgrades are excluded.

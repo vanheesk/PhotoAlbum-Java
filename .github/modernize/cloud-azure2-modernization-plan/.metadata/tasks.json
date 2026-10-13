@@ -13,14 +13,14 @@
     {
       "type": "infrastructure",
       "id": "002-infrastructure-azure",
-      "description": "Generate and provision Azure infrastructure for the Photo Album application.",
+      "description": "Extend the existing AKS, container registry, and PostgreSQL setup with reproducible Azure infrastructure as code.",
       "reason": "Azure resources are required to host the application and its PostgreSQL database.",
-      "requirements": "Create and provision the Azure resources required for Azure Container Apps and Azure Database for PostgreSQL, including the secure connectivity and identity configuration required by the application. Do not assume a subscription ID or region; obtain these before provisioning.",
-      "iacType": "bicep",
+      "requirements": "Generate and provision Terraform infrastructure for the existing Azure Kubernetes Service, Azure Container Registry, and Azure Database for PostgreSQL deployment architecture. Use the existing azure-setup.ps1 configuration as context, preserve secure connectivity and managed identity, and do not assume a subscription ID; use the configured westus3 region unless the user specifies otherwise.",
+      "iacType": "terraform",
       "provision": true,
       "skills": [
         {
-          "name": "infrastructure-bicep-generation",
+          "name": "infrastructure-terraform-generation",
           "location": "builtin"
         }
       ]
@@ -88,16 +88,16 @@
     },
     {
       "type": "deployment",
-      "id": "007-deployment-azure-container-apps",
-      "description": "Containerize and deploy the Photo Album application to Azure Container Apps.",
+      "id": "007-deployment-azure-aks",
+      "description": "Containerize and deploy the Photo Album application to Azure Kubernetes Service.",
       "reason": "Deployment to Azure is explicitly requested to make the modernized application available in its target cloud environment.",
-      "requirements": "Build the application container and deploy it to Azure Container Apps using the provisioned Azure resources. Configure the application to connect securely to Azure Database for PostgreSQL using managed identity and verify the deployed application is operational.",
-      "targetAzureService": "azurecontainerapp",
-      "resourceStatus": "New resources provisioned by the infrastructure task.",
-      "deploymentTool": "bicep",
+      "requirements": "Build the application container and deploy it to the AKS cluster and Azure Container Registry configured by the infrastructure task. Configure the application to connect securely to Azure Database for PostgreSQL using managed identity and verify the deployed application is operational.",
+      "targetAzureService": "aks",
+      "resourceStatus": "Existing AKS, ACR, and PostgreSQL setup extended and provisioned by the infrastructure task.",
+      "deploymentTool": "terraform",
       "skills": [
         {
-          "name": "azcli-containerapp-deploy",
+          "name": "azcli-aks-deploy",
           "location": "builtin"
         }
       ],
