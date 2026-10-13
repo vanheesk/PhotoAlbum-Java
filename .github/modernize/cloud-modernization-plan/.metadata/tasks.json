@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Modernization tasks for the Photo Album Java cloud modernization plan.",
+  "tasks": [
+    {
+      "type": "setupBaseline",
+      "id": "001-setup-baseline",
+      "description": "Capture a frozen test specification and dependency strategy before modernization.",
+      "requirements": "Snapshot the application's main source directory at src/main. Establish the source-state test specification and infra-decision table for verification of the Oracle-to-Azure-PostgreSQL migration.",
+      "dependencies": []
+    },
+    {
+      "type": "infrastructure",
+      "id": "002-infrastructure",
+      "description": "Generate and provision the Azure resources required to host Photo Album.",
+      "requirements": "Provision the Azure Container Apps hosting environment and app, Azure Container Registry, and Azure Database for PostgreSQL Flexible Server. Configure managed identity access between the app and database/registry. Use Bicep; subscription and deployment-region details must be supplied before provisioning.",
+      "skills": [
+        {
+          "name": "infrastructure-bicep-generation",
+          "location": "builtin"
+        }
+      ],
+      "iacType": "bicep",
+      "provision": true,
+      "dependencies": []
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-oracle-to-postgresql",
+      "description": "Migrate Photo Album persistence from Oracle to Azure Database for PostgreSQL.",
+      "reason": "The current Maven configuration includes an Oracle JDBC driver, and repository queries use Oracle-specific SQL constructs.",
+      "requirements": "Replace Oracle database connectivity and Oracle-specific SQL with PostgreSQL-compatible behavior for Azure Database for PostgreSQL. Preserve photo metadata and BLOB persistence. Configure passwordless managed-identity authentication for the Azure PostgreSQL connection.",
+      "skills": [
+        {
+          "name": "migration-oracle-to-postgresql",
+          "location": "builtin"
+        },
+        {
+          "name": "migration-mi-postgresql",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "dependencies": []
+    },
+    {
+      "type": "integrationTest",
+      "id": "004-integrationTest",
+      "description": "Build integration tests for migrated Azure services and run post-migration verification",
+      "requirements": "Use real-mode verification against the provisioned Azure PostgreSQL service and the migrated application. Verify the migrated persistence paths, including photo metadata and photo data. Follow the dependency strategy captured in the frozen baseline.",
+      "dependencies": [
+        "001-setup-baseline",
+        "002-infrastructure",
+        "003-transform-oracle-to-postgresql"
+      ]
+    },
+    {
+      "type": "security",
+      "id": "005-security",
+      "description": "Scan dependencies for known CVEs and remediate vulnerabilities before deployment.",
+      "requirements": "Scan all project dependencies for known CVEs. Upgrade vulnerable dependencies to the minimum patched version. If a fix requires a major-version upgrade, document the dependency, current and target versions, and breaking-change risk. Verify the project builds and unit tests pass after remediation.",
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "dependencies": [
+        "003-transform-oracle-to-postgresql",
+        "004-integrationTest"
+      ]
+    },
+    {
+      "type": "deployment",
+      "id": "006-deployment",
+      "description": "Containerize and deploy Photo Album to Azure Container Apps.",
+      "requirements": "Build and deploy the migrated Photo Album application using the provisioned Azure resources. Configure runtime access to Azure Database for PostgreSQL through managed identity, and verify the deployed application is reachable.",
+      "skills": [
+        {
+          "name": "azcli-containerapp-deploy",
+          "location": "builtin"
+        }
+      ],
+      "targetAzureService": "azurecontainerapp",
+      "resourceStatus": "Provisioned by the infrastructure task.",
+      "deploymentTool": "bicep",
+      "dependencies": [
+        "002-infrastructure",
+        "003-transform-oracle-to-postgresql",
+        "004-integrationTest",
+        "005-security"
+      ]
+    }
+  ],
+  "metadata": {
+    "planName": "cloud-modernization-plan",
+    "projectName": "Photo Album",
+    "language": "java",
+    "createdAt": "2026-10-13T11:53:09Z",
+    "version": "1.0"
+  }
+}
